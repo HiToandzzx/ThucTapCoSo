@@ -1,0 +1,23 @@
+ĐỀ THỰC TẬP CƠ SỞ
+
+Đề bài : Xây dựng chương trình tìm đường đi trong đồ thị có hướng.
+Mục đích: Thể hiện giải thuật đã học dưới dạng chương trình hoàn chỉnh
+
+Yêu cầu :
+
+Mức 1 :
+1. Trình bày lại lý thuyết đã được học.
+2. Sử dụng ngôn ngữ cấp cao : C/C++ để thể hiện
+- Tổ chức dữ liệu phù hợp 
+- Nhập tập dữ liệu từ bàn phím.
+- Nhập tập dữ liệu từ file
+- Chọn giải thuật thực hiện
+3. Thuật toán: Tham khảo giáo trình môn Cấu trúc dữ liệu, Kỹ thuật lập trình
+	
+Mức 2 : Minh họa thuật toán bằng đồ họa
+
+Kết thúc thực tập: Viết thu hoạch, chương trình thực hiện
+
+Tài liệu tham khảo :
+[1] Cấu trúc dữ liệu & Giải thuật
+[2] Kỹ thuật lập trình
