@@ -192,11 +192,13 @@ if graph_data:
                 edges_to_plot = [(shortest_path[j], shortest_path[j + 1]) for j in range(len(shortest_path) - 1)]
 
                 print(f"\nĐường đi ngắn nhất từ đỉnh {start_node} đến đỉnh {end_node}: {' -> '.join(map(str, shortest_path))}")
-
+                
                 plt.figure(figsize=(10, 5)) 
                 plt.subplot(1, 2, 1)
                 plt.title("Đồ thị gốc")
                 check()
+
+                plt.tight_layout()
 
                 plt.subplot(1, 2, 2)
                 plt.title("Đường đi ngắn nhất")  
@@ -208,11 +210,10 @@ if graph_data:
                         nx.draw_networkx_edges(G, pos, edgelist=[(source, target)], edge_color='red', width=2.0, connectionstyle="arc3,rad=0.3")
                     else:
                         nx.draw_networkx_edges(G, pos, edgelist=[(source, target)], edge_color='red', width=2.0)
-
-
+                
                 plt.pause(1)
+                plt.tight_layout()
                 plt.show()
-
 
                 # Gọi hàm lưu các đường đi vào file
                 save_paths(adjacency_matrix, all_paths, True, "output_paths.txt")  
@@ -239,6 +240,8 @@ if graph_data:
                 plt.title("Đồ thị gốc")
                 check() 
 
+                plt.tight_layout()
+
                 plt.subplot(1, 2, 2)
                 plt.title("Đường đi dài nhất")  
                 check()
@@ -254,6 +257,7 @@ if graph_data:
                         nx.draw_networkx_edges(G, pos, edgelist=[(source, target)], edge_color='red', width=2.0)
 
                 plt.pause(1)
+                plt.tight_layout()
                 plt.show()
 
                 # Gọi hàm lưu các đường đi vào file
@@ -295,6 +299,8 @@ if graph_data:
                 plt.title("Đồ thị gốc")
                 check()
 
+                plt.tight_layout()
+
                 plt.subplot(1, 2, 2)
                 plt.title("Đường đi có tổng trọng số nhỏ nhất")
                 check()
@@ -310,6 +316,7 @@ if graph_data:
                         nx.draw_networkx_edges(G, pos, edgelist=[(source, target)], edge_color='red', width=2.0)
 
                 plt.pause(1)
+                plt.tight_layout()
                 plt.show()
 
                 # Gọi hàm lưu các đường đi vào file
@@ -350,6 +357,8 @@ if graph_data:
                 plt.title("Đồ thị gốc")
                 check()
 
+                plt.tight_layout()
+
                 plt.subplot(1, 2, 2)
                 plt.title("Đường đi có tổng trọng số lớn nhất")
                 check()
@@ -365,6 +374,7 @@ if graph_data:
                         nx.draw_networkx_edges(G, pos, edgelist=[(source, target)], edge_color='red', width=2.0)
 
                 plt.pause(1)
+                plt.tight_layout()
                 plt.show()
 
                 # Gọi hàm lưu các đường đi vào file
