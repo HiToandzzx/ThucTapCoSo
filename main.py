@@ -2,57 +2,46 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import os
 from datetime import datetime
+from matplotlib.patches import FancyArrowPatch
 
 def create_graph_from_input():
-    choice = input("\nChọn một trong hai lựa chọn sau đây:\n1. Nhập dữ liệu từ bàn phím\n2. Nhập dữ liệu từ file txt\nChọn (1 hoặc 2): ")
-    
-    G = nx.DiGraph()
-    pos = None
-    
-    # LỰA CHỌN 1: NHẬP DỮ LIỆU TỪ BÀN PHÍM
-    if choice == '1':
-        print("\nNhập cạnh theo định dạng (đỉnh nguồn_đỉnh đích_trọng số)\nEx: 0 1 5:")
-        num_edges = int(input("Nhập số cạnh của đồ thị: "))
-        # Lặp số lần bằng số cạnh.
-        for _ in range(num_edges): 
-            # Chuyển đổi chuỗi nhập thành một danh sách các thành phần, tách nhau bởi khoảng trắng.
-            edge = input().split() 
-            # Sử dụng map để chuyển đổi các phần tử trong danh sách edge từ chuỗi thành số nguyên.
-            source, target, weight= map(int, edge)
-            # Thêm cạnh mới vào đồ thị.
-            G.add_edge(source, target, weight=weight) 
+    while True:
+        choice = input("\nChọn một trong hai lựa chọn sau đây:\n1. Nhập dữ liệu từ bàn phím\n2. Nhập dữ liệu từ file txt\nChọn (1 hoặc 2): ")
         
-        # VẼ ĐỒ THỊ
-        pos = nx.circular_layout(G) # Sử dụng layout dạng hình tròn.
+        G = nx.DiGraph()
+        pos = None
         
-    # LỰA CHỌN 2: LẤY DỮ LIỆU TỪ FILE TXT
-    elif choice == '2':
-        # Lấy đường dẫn tuyệt đối đến thư mục chứa tệp đang thực thi chương trình.
-        current_directory = os.path.dirname(os.path.abspath(__file__)) 
-        # Tạo đường dẫn tới file "input.txt" trong cùng thư mục với file đang thực thi.
-        file_path = os.path.join(current_directory, "input.txt") 
-        if os.path.exists(file_path): 
-            try:
-                # Mở file và đọc từng dòng.
-                with open(file_path, 'r') as file: 
-                    lines = file.readlines()
-                    for line in lines:
-                        edge = list(map(int, line.strip().split()))
-                        # Lấy thông tin trọng số từ dòng
-                        source, target, weight = edge  
-                        G.add_edge(source, target, weight=weight)
-                        
-                pos = nx.circular_layout(G)
-            except FileNotFoundError:
-                print("Không tìm thấy tệp tin.")
+        if choice == '1':
+            print("\nNhập cạnh theo định dạng (đỉnh nguồn_đỉnh đích_trọng số)\nEx: 0 1 5:")
+            num_edges = int(input("Nhập số cạnh của đồ thị: "))
+            for _ in range(num_edges): 
+                edge = input().split() 
+                source, target, weight = map(int, edge)
+                G.add_edge(source, target, weight=weight) 
+            pos = nx.circular_layout(G)
+            break  # Thoát khỏi vòng lặp nếu dữ liệu nhập là hợp lệ
+            
+        elif choice == '2':
+            current_directory = os.path.dirname(os.path.abspath(__file__)) 
+            file_path = os.path.join(current_directory, "input.txt")
+            if os.path.exists(file_path): 
+                try:
+                    with open(file_path, 'r') as file: 
+                        lines = file.readlines()
+                        for line in lines:
+                            edge = list(map(int, line.strip().split()))
+                            source, target, weight = edge  
+                            G.add_edge(source, target, weight=weight)
+                    pos = nx.circular_layout(G)
+                    break  # Thoát khỏi vòng lặp nếu dữ liệu nhập là hợp lệ
+                except FileNotFoundError:
+                    print("Không tìm thấy tệp tin.")
+                    return None
+            else:
+                print("Đường dẫn không chính xác.")
                 return None
         else:
-            print("Đường dẫn không chính xác.")
-            return None
-        
-    else:
-        print("Lựa chọn không hợp lệ.")
-        return None
+            print("\nLựa chọn không hợp lệ. Vui lòng chọn lại.")
     
     return G, pos
 
@@ -98,74 +87,84 @@ def create_adjacency_matrix(G):
     adjacency_matrix = nx.convert_matrix.to_numpy_array(G) 
     return adjacency_matrix
 
-# LƯU MA TRẬN KỀ VÀO FILE
-def save_matrix_to_file(matrix, file_name):
+# LƯU CÁC ĐƯỜNG ĐI MIN/MAX
+def save_paths(matrix, all_paths, value, file_name):
     current_time = datetime.now().strftime('%d''/''%m''_''%H'':''%M')
     current_directory = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(current_directory, file_name)
     try:
         with open(file_path, 'a', encoding='utf-8') as file:
-            file.write(f"\n\n{current_time}\nMa trận kề:\n {matrix}\n")
+            if not all_paths:
+                file.write(f"\nKhông tìm thấy đường đi từ đỉnh {start_node} đến đỉnh {end_node}!!!\n")
+            else:
+                if value:
+                    file.write(f"\n\n{current_time}\nMa trận kề:\n {matrix}\n")
+                    shortest_path = min(all_paths, key=len)
+                    file.write(f"\nĐường đi ngắn nhất từ đỉnh {start_node} đến đỉnh {end_node}: {' -> '.join(map(str, shortest_path))}\n")
+                else:
+                    file.write(f"\n\n{current_time}\nMa trận kề:\n {matrix}\n")
+                    longest_path = max(all_paths, key=len)
+                    file.write(f"\nĐường đi dài nhất từ đỉnh {start_node} đến đỉnh {end_node}: {' -> '.join(map(str, longest_path))}\n")
     except FileNotFoundError:
         print("Không tìm thấy tệp tin.")
         return None
-
-# LƯU CÁC ĐƯỜNG ĐI VÀO FILE TXT
-def save_paths_to_file(all_paths, file_name):
+    
+# LƯU CÁC ĐƯỜNG ĐI CÓ TRỌNG SỐ MIN/MAX
+def save_weights(matrix, all_paths, value, file_name):
+    current_time = datetime.now().strftime('%d''/''%m''_''%H'':''%M')
     current_directory = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(current_directory, file_name)
-
     try:
         with open(file_path, 'a', encoding='utf-8') as file:
             if not all_paths:  
                 file.write(f"\nKhông tìm thấy đường đi từ đỉnh {start_node} đến đỉnh {end_node}!!!\n")
             else: 
-                shortest_path = min(all_paths, key=len)  
-                longest_path = max(all_paths, key=len)  
-
-                if (shortest_path != longest_path):
-                    file.write(f"\nCác đường đi đã tìm được từ đỉnh {start_node} đến đỉnh {end_node}:\n")
-                    file.write(f"\nĐường đi ngắn nhất: {' -> '.join(map(str, shortest_path))}\n")
-                    file.write(f"Đường đi dài nhất: {' -> '.join(map(str, longest_path))}\n")
+                if value:
+                    file.write(f"\n\n{current_time}\nMa trận kề:\n {matrix}\n")
+                    min_path = min(all_paths_with_weights, key=lambda x: sum(x.values()))
+                    file.write(f"\nĐường đi có trọng số nhỏ nhất: {min_path}, trọng số {min_weight}\n")
                 else:
-                    file.write(f"\nChỉ có 1 đường đi đã tìm được từ đỉnh {start_node} đến đỉnh {end_node}:\n")
-                    file.write(f"\nĐường đi: {' -> '.join(map(str, shortest_path))}\n")
+                    file.write(f"\n\n{current_time}\nMa trận kề:\n {matrix}\n")
+                    max_path = max(all_paths_with_weights, key=lambda x: sum(x.values()))
+                    file.write(f"\nĐường đi có trọng số lớn nhất: {max_path}, trọng số {max_weight}\n")
     except FileNotFoundError:
         print("Không tìm thấy tệp tin.")
         return None
     
-# LƯU CÁC ĐƯỜNG ĐI CÓ TRỌNG SỐ MIN / MAX
-def save_dijkastra(all_paths, file_name):
-    current_time = datetime.now().strftime('%d''/''%m''_''%H'':''%M')
-    current_directory = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(current_directory, file_name)
+# HÀM THOÁT CHƯƠNG TRÌNH
+def exit_program():
+    while True:
+        print("\n       BẠN CÓ MUỐN TIẾP TỤC CHƯƠNG TRÌNH?")
+        print("==============================================")
+        print("1. Tiếp tục")
+        print("2. Thoát")
+        choice = input("Nhập lựa chọn: ")
 
-    try:
-        with open(file_path, 'a', encoding='utf-8') as file:
-            if not all_paths:  
-                file.write(f"\nKhông tìm thấy đường đi từ đỉnh {start_node} đến đỉnh {end_node}!!!\n")
-            else:  
-                min_path = min(all_paths_with_weights, key=lambda x: sum(x.values()))
-                max_path = max(all_paths_with_weights, key=lambda x: sum(x.values()))
+        if choice == '1':
+            return True  # Trả về True nếu người dùng muốn tiếp tục
+        elif choice == '2':
+            print("\nĐã thoát chương trình.\n")
+            return False  # Trả về False nếu người dùng muốn thoát
+        else:
+            print("Lựa chọn không hợp lệ. Vui lòng chọn lại.")
 
-                if (min_path != max_path):
-                    file.write(f"\nCác đường đi đã tìm được từ đỉnh {start_node} đến đỉnh {end_node}:\n")
-                    file.write(f"\nĐường đi có trọng số nhỏ nhất: {min_path}, trọng số {min_weight}\n")
-                    file.write(f"Đường đi có trọng số lớn nhất: {max_path}, trọng số {max_weight}")
-                else:
-                    file.write(f"\nĐường đi có trọng số nhỏ nhất và lớn nhất: {min_path}, trọng số {min_weight}\n")
+def check():
+    for source, target, data in G.edges(data=True):
+        edge_labels = {(source, target): data.get('weight')}  
+        
+        if G.has_edge(target, source):
+            nx.draw(G, pos, with_labels=True, node_size=900, font_size=15, node_color='skyblue', edgelist=[(source, target)], arrows=True, connectionstyle="arc3,rad=0.3")
+            nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=10, bbox=dict(alpha=0), label_pos=0.8, verticalalignment='center') 
+        else:
+            nx.draw(G, pos, with_labels=True, node_size=900, font_size=15, node_color='skyblue', edgelist=[(source, target)], arrows=True)
+            nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=10, verticalalignment='bottom', bbox=dict(alpha=0))     
 
-
-    except FileNotFoundError:
-        print("Không tìm thấy tệp tin.")
-        return None
 
 # TẠO ĐỒ THỊ TỪ INPUT
 graph_data = create_graph_from_input()
 
-while True:
-
-    if graph_data:
+if graph_data:
+    while True:
         G, pos = graph_data
 
         # HIỂN THỊ MA TRẬN KỀ Ở CONSOLE
@@ -175,8 +174,10 @@ while True:
 
         print("\n           TÌM ĐƯỜNG ĐI TRONG ĐỒ THỊ CÓ HƯỚNG")
         print("=======================================================")
-        print("1. Tìm đường đi ngắn nhất và dài nhất.")
-        print("2. Tìm đường đi có tổng trọng số nhỏ nhất và lớn nhất.")
+        print("1. Tìm đường đi ngắn nhất.")
+        print("2. Tìm đường đi dài nhất.")
+        print("3. Tìm đường đi có tổng trọng số nhỏ nhất.")
+        print("4. Tìm đường đi có tổng trọng số lớn nhất.")
         option = input("Nhập lựa chọn: ")
 
         # TÌM ĐƯỜNG ĐI NGẮN NHẤT VÀ DÀI NHẤT
@@ -187,89 +188,86 @@ while True:
 
             if all_paths:
                 shortest_path = min(all_paths, key=len)  
-                longest_path = max(all_paths, key=len)   
 
-                if len(shortest_path) == len(longest_path):
-                    print(f"\nChỉ có 1 đường đi từ đỉnh {start_node} đến đỉnh {end_node}")
-                    print(f"Đường đi: {' -> '.join(map(str, shortest_path))}")
+                edges_to_plot = [(shortest_path[j], shortest_path[j + 1]) for j in range(len(shortest_path) - 1)]
 
-                    plt.figure(figsize=(10, 5)) 
-                    plt.subplot(1, 2, 1)
-                    plt.title("Đồ thị gốc")
-                    # Từ điển lưu trữ thông tin về trọng số của các cạnh trong đồ thị
-                    edge_labels = {(i, j): int(weight) for i, j, weight in G.edges(data='weight')} 
-                    nx.draw(G, pos, with_labels=True, node_size=900, node_color='skyblue', font_weight='bold', arrows=True)
-                    # Hiển thị trọng số
-                    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels) 
+                print(f"\nĐường đi ngắn nhất từ đỉnh {start_node} đến đỉnh {end_node}: {' -> '.join(map(str, shortest_path))}")
 
-                    plt.subplot(1, 2, 2)
-                    plt.title("Đường đi")  
-                    edge_labels = {(i, j): int(weight) for i, j, weight in G.edges(data='weight')}  
-                    nx.draw(G, pos, with_labels=True, node_size=900, node_color='skyblue', font_weight='bold', arrows=True)
-                    # Hiển thị trọng số
-                    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels) 
-                    # Danh sách các cặp đỉnh liền kề trên đường đi ngắn nhất 
-                    edges_to_plot = [(shortest_path[j], shortest_path[j + 1]) for j in range(len(shortest_path) - 1)]
+                plt.figure(figsize=(10, 5)) 
+                plt.subplot(1, 2, 1)
+                plt.title("Đồ thị gốc")
+                check()
 
-                    for edge in edges_to_plot:
-                        plt.tight_layout()
-                        plt.pause(1.5)
-                        nx.draw_networkx_edges(G, pos, edgelist=[edge], edge_color='red', width=3.0)
-                        nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+                plt.subplot(1, 2, 2)
+                plt.title("Đường đi ngắn nhất")  
+                check() 
 
-                    plt.pause(1)
+                for source, target in edges_to_plot:  
+                    plt.pause(1.5)
+                    if G.has_edge(target, source):
+                        nx.draw_networkx_edges(G, pos, edgelist=[(source, target)], edge_color='red', width=2.0, connectionstyle="arc3,rad=0.3")
+                    else:
+                        nx.draw_networkx_edges(G, pos, edgelist=[(source, target)], edge_color='red', width=2.0)
 
-                    plt.tight_layout()
-                    plt.show()
 
-                else:
-                    print(f"\nCác đường đi từ đỉnh {start_node} đến đỉnh {end_node}")
-                    print(f"Đường đi ngắn nhất: {' -> '.join(map(str, shortest_path))}")
-                    print(f"Đường đi dài nhất: {' -> '.join(map(str, longest_path))}")
+                plt.pause(1)
+                plt.show()
 
-                    plt.figure(figsize=(15, 5))  
-                    plt.subplot(1, 3, 1)  
-                    plt.title("Đồ thị gốc")
-                    edge_labels = {(i, j): int(weight) for i, j, weight in G.edges(data='weight')}  
-                    nx.draw(G, pos, with_labels=True, node_size=900, node_color='skyblue', font_weight='bold', arrows=True)
-                    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)  
 
-                    # Danh sách chứa hai đường đi
-                    paths_to_plot = [shortest_path, longest_path]
+                # Gọi hàm lưu các đường đi vào file
+                save_paths(adjacency_matrix, all_paths, True, "output_paths.txt")  
 
-                    # Duyệt qua danh sách paths_to_plot
-                    for i, path in enumerate(paths_to_plot):
-                        plt.tight_layout()
-                        # subplot 1 hàng, 3 cột với chỉ số của subplot được tính từ i + 2
-                        plt.subplot(1, 3, i + 2)
-                        plt.title(f"{'Đường đi ngắn nhất' if i == 0 else 'Đường đi dài nhất'}")
-                        nx.draw(G, pos, with_labels=True, node_size=900, node_color='skyblue', font_weight='bold', arrows=True)
-                        nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)  
-
-                        # Tạo danh sách các cặp đỉnh liên tiếp trong đường đi path.
-                        edges = [(path[j], path[j + 1]) for j in range(len(path) - 1)]
-
-                        for edge in edges:
-                            plt.pause(1.5)
-                            nx.draw_networkx_edges(G, pos, edgelist=[edge], edge_color='red' if i == 0 else 'blue', width=3.0)
-                            nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)  
-
-                        plt.pause(1)
-
-                    plt.tight_layout()
-                    plt.show()    
+                # Gọi hàm để xử lý lựa chọn tiếp tục hoặc thoát
+                if not exit_program():  
+                    break
 
             else:
                 print(f"\nKhông có đường đi từ đỉnh {start_node} đến đỉnh {end_node}!!!\n")
 
-            # Gọi hàm để hiển thị ma trận kề của đồ thị và lưu vào file 
-            save_matrix_to_file(adjacency_matrix, "output_DFS.txt") 
-            
-            # Gọi hàm lưu các đường đi vào file
-            save_paths_to_file(all_paths, "output_DFS.txt")  
+        elif option == '2':
+            start_node = int(input("\nNhập đỉnh bắt đầu: "))
+            end_node = int(input("Nhập đỉnh đích: "))
+            all_paths = depth_first_search(G, start_node, end_node)
+
+            if all_paths:
+                longest_path = max(all_paths, key=len)  
+
+                print(f"\nĐường đi dài nhất từ đỉnh {start_node} đến đỉnh {end_node}: {' -> '.join(map(str, longest_path))}")
+
+                plt.figure(figsize=(10, 5)) 
+                plt.subplot(1, 2, 1)
+                plt.title("Đồ thị gốc")
+                check() 
+
+                plt.subplot(1, 2, 2)
+                plt.title("Đường đi dài nhất")  
+                check()
+
+                # Danh sách các cặp đỉnh liền kề trên đường đi ngắn nhất 
+                edges_to_plot = [(longest_path[j], longest_path[j + 1]) for j in range(len(longest_path) - 1)]
+
+                for source, target in edges_to_plot:  
+                    plt.pause(1.5)
+                    if G.has_edge(target, source):
+                        nx.draw_networkx_edges(G, pos, edgelist=[(source, target)], edge_color='red', width=2.0, connectionstyle="arc3,rad=0.3")
+                    else:
+                        nx.draw_networkx_edges(G, pos, edgelist=[(source, target)], edge_color='red', width=2.0)
+
+                plt.pause(1)
+                plt.show()
+
+                # Gọi hàm lưu các đường đi vào file
+                save_paths(adjacency_matrix, all_paths, False, "output_paths.txt")  
+
+                # Gọi hàm để xử lý lựa chọn tiếp tục hoặc thoát
+                if not exit_program():  
+                    break
+
+            else:
+                print(f"\nKhông có đường đi từ đỉnh {start_node} đến đỉnh {end_node}!!!\n")
 
         # TÌM ĐƯỜNG ĐI CÓ TRỌNG SỐ NHỎ NHẤT VÀ LỚN NHẤT
-        elif option == '2':
+        elif option == '3':
             start_node = int(input("\nNhập đỉnh bắt đầu: "))
             end_node = int(input("Nhập đỉnh đích: "))
             all_paths = depth_first_search(G, start_node, end_node)
@@ -277,7 +275,6 @@ while True:
             if all_paths:
                 # Tạo ra một danh sách chứa các từ điển. 
                 # Mỗi từ điển trong danh sách này ánh xạ từ cặp đỉnh liên tiếp trong mỗi đường đi (path) đến trọng số của cạnh nối chúng trong đồ thị.
-                 
                 all_paths_with_weights = [
                     {(path[i], path[i + 1]): G[path[i]][path[i + 1]]['weight'] for i in range(len(path) - 1)} 
                     for path in all_paths
@@ -285,107 +282,109 @@ while True:
 
                 # Sử dụng tham số key để chỉ định tiêu chí để tìm đối tượng (trọng số).
                 min_path = min(all_paths_with_weights, key=lambda x: sum(x.values()))
-                max_path = max(all_paths_with_weights, key=lambda x: sum(x.values()))
 
                 # Tính tổng trọng số của đường đi có tổng trọng số nhỏ nhất.
                 # Hàm values() trả về danh sách các giá trị (trọng số của các cạnh) trong từ điển.
                 min_weight = sum(min_path.values()) 
-                max_weight = sum(max_path.values()) 
 
-                if min_weight != max_weight:
-                    print(f"\nĐường đi có tổng trọng số nhỏ nhất là: {min_weight}")
-                    print(min_path)
-                    print(f"\nĐường đi có tổng trọng số lớn nhất là: {max_weight}")
-                    print(max_path)
+                print(f"\nĐường đi có tổng trọng số nhỏ nhất từ đỉnh {start_node} đến {end_node}: {min_weight}")
+                print(min_path)
 
-                    plt.figure(figsize=(15, 5))
-                    plt.subplot(1, 3, 1)
-                    plt.title("Đồ thị gốc")
-                    edge_labels = {(i, j): int(weight) for i, j, weight in G.edges(data='weight')}
-                    nx.draw(G, pos, with_labels=True, node_size=900, node_color='skyblue', font_weight='bold', arrows=True)
-                    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+                plt.figure(figsize=(10, 5))
+                plt.subplot(1, 2, 1)
+                plt.title("Đồ thị gốc")
+                check()
 
-                    # Tạo 1 danh sách
-                    paths_to_plot = [min_path, max_path]
+                plt.subplot(1, 2, 2)
+                plt.title("Đường đi có tổng trọng số nhỏ nhất")
+                check()
 
-                    for i, path in enumerate(paths_to_plot):
-                        plt.tight_layout()
-                        plt.subplot(1, 3, i + 2)
-                        plt.title(f"{'Đường đi trọng số min' if i == 0 else 'Đường đi trọng số max'}")
-                        nx.draw(G, pos, with_labels=True, node_size=900, node_color='skyblue', font_weight='bold', arrows=True)
-                        nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+                # Tạo 1 danh sách các cặp đỉnh tương ứng với cạnh trong đường đi có trọng số nhỏ nhất (min_path).
+                edges_to_plot = [(edge[0], edge[1]) for edge in min_path.keys()]
 
-                        # Tạo danh sách các cặp đỉnh từ các khóa trong từ điển path.
-                        edges = [(u, v) for (u, v) in path.keys()]
+                for source, target in edges_to_plot:  
+                    plt.pause(1.5)
+                    if G.has_edge(target, source):
+                        nx.draw_networkx_edges(G, pos, edgelist=[(source, target)], edge_color='red', width=2.0, connectionstyle="arc3,rad=0.3")
+                    else:
+                        nx.draw_networkx_edges(G, pos, edgelist=[(source, target)], edge_color='red', width=2.0)
 
-                        for edge in edges:
-                            plt.pause(1.5)
-                            nx.draw_networkx_edges(G, pos, edgelist=[edge], edge_color='red' if i == 0 else 'blue', width=3.0)
-                            nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+                plt.pause(1)
+                plt.show()
 
-                        plt.pause(1)
+                # Gọi hàm lưu các đường đi vào file
+                save_weights(adjacency_matrix, all_paths, 1, "output_weights.txt")
 
-                    plt.tight_layout()
-                    plt.show()
-
-                else:
-                    print(f"\nĐường đi có tổng trọng số nhỏ nhất và lớn nhất là {min_weight} từ đỉnh {start_node} đến {end_node}:")
-                    print(min_path)
-
-                    plt.figure(figsize=(10, 5))
-                    plt.subplot(1, 2, 1)
-                    plt.title("Đồ thị gốc")
-                    edge_labels = {(i, j): int(weight) for i, j, weight in G.edges(data='weight')}
-                    nx.draw(G, pos, with_labels=True, node_size=900, node_color='skyblue', font_weight='bold', arrows=True)
-                    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels) # Hiển thị trọng số
-
-                    plt.subplot(1, 2, 2)
-                    plt.title("Đường đi có tổng trọng số min, max")
-                    edge_labels = {(i, j): int(weight) for i, j, weight in G.edges(data='weight')}
-                    nx.draw(G, pos, with_labels=True, node_size=900, node_color='skyblue', font_weight='bold', arrows=True)
-                    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)  # Hiển thị trọng số
-                    # Tạo 1 danh sách các cặp đỉnh tương ứng với cạnh trong đường đi có trọng số nhỏ nhất (min_path).
-                    edges_to_plot = [(edge[0], edge[1]) for edge in min_path.keys()]
-
-                    for edge in edges_to_plot:
-                        plt.tight_layout()
-                        plt.pause(1.5)
-                        nx.draw_networkx_edges(G, pos, edgelist=[edge], edge_color='red', width=3.0)
-                        nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
-
-                    plt.pause(1)
-
-                    plt.tight_layout()
-                    plt.show()
+                # Gọi hàm để xử lý lựa chọn tiếp tục hoặc thoát
+                if not exit_program():  
+                    break
 
             else:
                 print(f"\nKhông có đường đi từ đỉnh {start_node} đến đỉnh {end_node}!!!\n")
 
-            # Gọi hàm để hiển thị ma trận kề của đồ thị và lưu vào file 
-            save_matrix_to_file(adjacency_matrix, "output_Dijkstra.txt") 
+        elif option == '4':
+            start_node = int(input("\nNhập đỉnh bắt đầu: "))
+            end_node = int(input("Nhập đỉnh đích: "))
+            all_paths = depth_first_search(G, start_node, end_node)
 
-            # Gọi hàm lưu các đường đi vào file
-            save_dijkastra(all_paths, "output_Dijkstra.txt")  
+            if all_paths:
+                # Tạo ra một danh sách chứa các từ điển. 
+                # Mỗi từ điển trong danh sách này ánh xạ từ cặp đỉnh liên tiếp trong mỗi đường đi (path) đến trọng số của cạnh nối chúng trong đồ thị.
+                all_paths_with_weights = [
+                    {(path[i], path[i + 1]): G[path[i]][path[i + 1]]['weight'] for i in range(len(path) - 1)} 
+                    for path in all_paths
+                ]
+
+                # Sử dụng tham số key để chỉ định tiêu chí để tìm đối tượng (trọng số).
+                max_path = max(all_paths_with_weights, key=lambda x: sum(x.values()))
+
+                # Tính tổng trọng số của đường đi có tổng trọng số nhỏ nhất.
+                # Hàm values() trả về danh sách các giá trị (trọng số của các cạnh) trong từ điển.
+                max_weight = sum(max_path.values()) 
+
+                print(f"\nĐường đi có tổng trọng số  lớn nhất từ đỉnh {start_node} đến {end_node}: {max_weight}")
+                print(max_path)
+
+                plt.figure(figsize=(10, 5))
+                plt.subplot(1, 2, 1)
+                plt.title("Đồ thị gốc")
+                check()
+
+                plt.subplot(1, 2, 2)
+                plt.title("Đường đi có tổng trọng số lớn nhất")
+                check()
+
+                # Tạo 1 danh sách các cặp đỉnh tương ứng với cạnh trong đường đi có trọng số nhỏ nhất (min_path).
+                edges_to_plot = [(edge[0], edge[1]) for edge in max_path.keys()]
+
+                for source, target in edges_to_plot:  
+                    plt.pause(1.5)
+                    if G.has_edge(target, source):
+                        nx.draw_networkx_edges(G, pos, edgelist=[(source, target)], edge_color='red', width=2.0, connectionstyle="arc3,rad=0.3")
+                    else:
+                        nx.draw_networkx_edges(G, pos, edgelist=[(source, target)], edge_color='red', width=2.0)
+
+                plt.pause(1)
+                plt.show()
+
+                # Gọi hàm lưu các đường đi vào file
+                save_weights(adjacency_matrix, all_paths, 0, "output_weights.txt")
+
+                # Gọi hàm để xử lý lựa chọn tiếp tục hoặc thoát
+                if not exit_program():  
+                    break
+
+            else:
+                print(f"\nKhông có đường đi từ đỉnh {start_node} đến đỉnh {end_node}!!!\n")
 
         else:
             print("\nLựa chọn không hợp lệ.")
-    
-        print("\nBẠN CÓ MUỐN TIẾP TỤC CHƯƠNG TRÌNH?")
-        print("1. Tiếp tục")
-        print("2. Thoát")
-        choice = input("Nhập lựa chọn: ")
-
-        if choice == '1':
-            continue  # Quay lại để người dùng nhập lựa chọn tìm đường đi mới
-        elif choice == '2':
-            print("\nĐã thoát chương trình.\n")
-            break  
-        else:
-            print("Lựa chọn không hợp lệ. Vui lòng chọn lại.")
 
 
 
-            
+
+
+        
 
 
 
