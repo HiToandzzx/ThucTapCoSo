@@ -2,7 +2,6 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import os
 from datetime import datetime
-from matplotlib.patches import FancyArrowPatch
 
 def create_graph_from_input():
     while True:
